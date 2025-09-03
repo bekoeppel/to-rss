@@ -11,6 +11,8 @@ from to_rss import get_session
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://en.wikipedia.org/wiki/"
+# Feed links point at the mobile site, which reads better on phones.
+MOBILE_BASE_URL = "https://en.m.wikipedia.org/wiki/"
 
 
 def get_current_events_by_date(lookup_date: date) -> str:
@@ -42,9 +44,12 @@ def get_articles() -> str:
     https://en.wikipedia.org/wiki/Portal:Current_events/Inclusion
     which then includes the past seven days.
     """
-    resolver = mwcomposerfromhell.ArticleResolver(
-        base_url="https://en.wikipedia.org/wiki/"
-    )
+    # Rendered links (the feed's own links and the ones inside each article) use
+    # the mobile site. Content is fetched from the desktop site instead: the
+    # mobile host 301-redirects ?action=raw to it, so resolving against it would
+    # cost an extra round-trip per article.
+    resolver = mwcomposerfromhell.ArticleResolver(base_url=MOBILE_BASE_URL)
+    fetch_resolver = mwcomposerfromhell.ArticleResolver(base_url=BASE_URL)
     feed = feedgenerator.Rss201rev2Feed(
         "Wikipedia: Portal: Current events",
         resolver.get_article_url(resolver.resolve_article("Portal:Current_events", "")),
@@ -61,10 +66,13 @@ def get_articles() -> str:
         composer = mwcomposerfromhell.WikicodeToHtmlComposer(resolver=resolver)
 
         # Download the article content.
-        url = resolver.get_article_url(
-            resolver.resolve_article(get_current_events_by_date(day), "")
+        article_name = get_current_events_by_date(day)
+        url = resolver.get_article_url(resolver.resolve_article(article_name, ""))
+        article = get_article(
+            fetch_resolver.get_article_url(
+                fetch_resolver.resolve_article(article_name, "")
+            )
         )
-        article = get_article(url)
         # Parse the article contents.
         with start_span(op="parse-wikitext", name="Parse " + url):
             wikicode = mwparserfromhell.parse(article)
