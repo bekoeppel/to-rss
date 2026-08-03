@@ -39,7 +39,7 @@ def extract_content(wikicode: mwparserfromhell.wikicode.Wikicode):
     """
     Returns a day's news items as Wikicode, or None if they can't be found.
 
-    Current event pages come in two shapes. Historically a single
+    Current event pages come in two layouts. Historically a single
     ``{{Current events}}`` template carried the whole day in its ``content``
     parameter. Newer pages instead sandwich the news between two copies of the
     template, marked ``top=yes`` and ``bottom=yes``, leaving the items in the
@@ -53,12 +53,12 @@ def extract_content(wikicode: mwparserfromhell.wikicode.Wikicode):
     if not templates:
         return None
 
-    # Legacy shape: the news is a parameter of the template.
+    # Legacy layout: the news is a parameter of the template.
     for template in templates:
         if template.has("content"):
             return template.get("content").value
 
-    # Current shape: the news is whatever follows the opening template, up to
+    # Current layout: the news is whatever follows the opening template, up to
     # the closing one (dropped along with anything after it).
     start = wikicode.index(templates[0]) + 1
     end = wikicode.index(templates[-1]) if len(templates) > 1 else len(wikicode.nodes)

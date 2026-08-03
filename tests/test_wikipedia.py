@@ -3,7 +3,7 @@ import mwparserfromhell
 from tests import assert_items_exists
 from to_rss.wikipedia import extract_content, get_articles
 
-# The shape used until mid-2026: the day's news lives in the template's
+# The layout used until mid-2026: the day's news lives in the template's
 # "content" parameter.
 LEGACY_ARTICLE = """{{Current events|year=2026|month=07|day=20|content=
 <!-- All news items below this line -->
@@ -12,7 +12,7 @@ LEGACY_ARTICLE = """{{Current events|year=2026|month=07|day=20|content=
 <!-- All news items above this line -->}}
 """
 
-# The shape used since: a "top=yes" template, the news, then a "bottom=yes" one.
+# The layout used since: a "top=yes" template, the news, then a "bottom=yes" one.
 SANDWICH_ARTICLE = """{{Current events|year=2026|month=08|day=2|top=yes}}
 
 <!-- All news items below this line -->
