@@ -25,6 +25,7 @@ from to_rss.pottermore import (  # noqa: E402
     pottermore_features,
     pottermore_news,
 )
+from to_rss.sentry import ignore_client_disconnects  # noqa: E402
 from to_rss.wikipedia import get_articles  # noqa: E402
 
 # Configure a file system cache to store responses for 5 minutes. With the
@@ -50,7 +51,10 @@ env = Environment(loader=FileSystemLoader(path.join(root, "to_rss", "templates")
 sentry_dsn = os.getenv("SENTRY_DSN")
 if sentry_dsn:
     sentry_sdk.init(
-        dsn=sentry_dsn, integrations=[FlaskIntegration()], traces_sample_rate=0.1
+        dsn=sentry_dsn,
+        integrations=[FlaskIntegration()],
+        traces_sample_rate=0.1,
+        before_send=ignore_client_disconnects,
     )
 
 
@@ -136,13 +140,6 @@ def serve_pottermore_news():
 @cache.cached()
 def serve_pottermore_features():
     return Response(pottermore_features(), mimetype="application/rss+xml")
-
-
-# Thunderbird endpoints.
-@app.route("/thunderbird/")
-def serve_thunderbird():
-    template = env.get_template("thunderbird.html")
-    return template.render()
 
 
 # The Players Tribune endpoints.

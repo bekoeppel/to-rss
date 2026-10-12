@@ -27,11 +27,12 @@ def get_current_events_by_date(lookup_date: date) -> str:
 
 def get_article(url: str) -> str:
     """Fetches and returns the article content as a string."""
-    response = get_session().get(
-        url,
-        params={"action": "raw"},
-        headers={"User-agent": "to-rssbot (+https://www.to-rss.xyz/)"},
-    )
+    with start_span(op="fetch-wikitext", name="Fetch " + url):
+        response = get_session().get(
+            url,
+            params={"action": "raw"},
+            headers={"User-agent": "to-rssbot (+https://www.to-rss.xyz/)"},
+        )
     return response.text
 
 
@@ -53,9 +54,10 @@ def extract_content(wikicode: mwparserfromhell.wikicode.Wikicode):
     if not templates:
         return None
 
-    # Legacy layout: the news is a parameter of the template.
+    # Legacy layout: the news is a parameter of the template. Editors sometimes
+    # leave an empty "content=" on a current layout page, which is ignored.
     for template in templates:
-        if template.has("content"):
+        if template.has("content") and template.get("content").value.strip():
             return template.get("content").value
 
     # Current layout: the news is whatever follows the opening template, up to
